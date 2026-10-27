@@ -1,10 +1,10 @@
 # 思维导图格式约定（Markmap）
 
-导图文件是主文档的**结构投影**，格式遵循 Markmap 语法（可在 https://markmap.js.org 或 VS Code "Markmap" 扩展中打开）。主文档是唯一权威源：修改先改主文档，再同步导图；两者条目数必须一致。
+导图源文件是主文档的**结构投影**，格式遵循 Markmap 语法。它只是渲染交互 HTML 的**临时中间产物，渲染成功后即删除，不作为交付物**。主文档是唯一权威源：修改先改主文档，再重新渲染 HTML；两者条目数必须一致。
 
 ## 文件格式
 
-文件名：`<功能名>.test-analysis.mindmap.md`，与主文档同目录。写入前检查同名文件，存在则加 `-2`、`-3` 后缀，禁止静默覆盖。
+文件名：`<功能名>.test-analysis.mindmap.md`，与主文档同目录；渲染产物为同目录 `<功能名>.test-analysis.html`。导图源是临时文件，每次渲染前重建、允许直接覆盖，不适用 `-2`/`-3` 防覆盖规则；HTML 交付物遵循与主文档相同的防覆盖/就地更新规则。
 
 ```markdown
 ---
@@ -44,19 +44,18 @@ markmap:
 
 ## frontmatter
 
-固定沿用默认值 `colorFreezeLevel: 2`、`maxWidth: 300`，不要改动或删除 `---` 块——Markmap 依赖它渲染标题样式。
+固定使用 `colorFreezeLevel: 2`、`maxWidth: 300`，不要改动或删除 `---` 块——Markmap 依赖它渲染标题样式。
 
-## 可选：渲染交互式 HTML
+## 渲染交互式 HTML（默认步骤）
 
-用户要求"渲染/出 HTML"时执行：
+写出导图源文件后立即执行：
 
 ```bash
-npx --yes markmap-cli "<导图.md 路径>" -o "<同目录同名>.html" --no-open
+npx --yes markmap-cli "<导图.md 路径>" -o "<同目录>/<功能名>.test-analysis.html" --no-open --offline
 ```
 
-降级处理（任一情况都不算任务失败）：
+- `--offline` 将 JS/CSS 内联进 HTML，产物离线可直接打开，浏览器打开即为交互导图
+- 渲染成功（HTML 已生成且体积明显大于源 md）→ **删除临时导图 md**；交付物 = 主文档 + HTML 两个文件
+- 降级处理（不算任务失败）：无法执行命令 / 缺少 Node.js / npx 下载失败 → 保留该 `.md` 并说明未生成 HTML 的原因，提供上面命令让用户自行执行（此时 md 作为降级交付物，可在 markmap.js.org 或 VS Code Markmap 扩展中查看）
 
-- 无法执行命令 / 缺少 Node.js / npx 下载失败 → 保留 `.md`，说明未生成 HTML 的原因，并提供上面这条命令让用户在有 Node.js 的环境自行执行
-- 渲染成功会在输出路径生成独立 HTML，浏览器直接打开即为交互导图
-
-完成后告知用户两个产物的路径及导图查看方式（markmap.js.org / VS Code Markmap 扩展 / 生成的 HTML）。
+完成后告知用户两个产物（主文档 md、交互 HTML）的路径。
